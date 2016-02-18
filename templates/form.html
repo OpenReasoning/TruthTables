@@ -6,6 +6,7 @@
 </script>
 
 <form id='formula-form' action="/submit" method="POST">
+    Available options: A, not(A), and(A, B), or(A, B), if(A, B), iff(A, B)
     <div id="formulas">
     {% for formula in formulas %}
         <input type="text" name="formula[]" value="{{ formula }}" placeholder="Formula" /><br />
