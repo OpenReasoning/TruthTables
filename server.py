@@ -5,6 +5,7 @@ from flask import Flask, Markup, render_template, request
 from forseti.formula import Symbol, Predicate, Not, And, Or, If, Iff
 from forseti.parser import parse
 import truthtables
+from truthtables import TRUE_STRING, FALSE_STRING
 
 app = Flask(__name__)
 
@@ -40,9 +41,16 @@ def index_page():
 @app.route("/submit", methods=['POST'])
 def generate_table():
     formulas = request.form.getlist('formula[]')
+    i = 0
+    while i < len(formulas):
+        formulas[i] = str(formulas[i]).strip()
+        if len(formulas[i]) == 0:
+            del formulas[i]
+            i -= 1
+        i += 1
     pretty = []
     for i in range(len(formulas)):
-        formulas[i] = str(formulas[i])
+        formulas[i] = str(formulas[i]).strip()
         pretty.append(pretty_print(parse(formulas[i])))
     symbols, values = truthtables.runner(formulas)
     rows = []
@@ -56,9 +64,10 @@ def generate_table():
                 if temp[k] not in ["¬", "∧", "∨", "→", "↔"]:
                     new_str += "&nbsp;"
                 else:
-                    #new_str += temp[k]
                     new_str += values[i][2][j][1][count]
                     count += 1
+            if new_str.replace("&nbsp;", "") == "":
+                new_str = "<b><u>" + (TRUE_STRING if values[i][1][j] else FALSE_STRING) + "</u></b>"
             rows[-1].append(Markup(new_str))
 
     form = Markup(render_template('form.html', formulas=formulas))
