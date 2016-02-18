@@ -1,0 +1,16 @@
+<script type="text/javascript">
+    function addRow() {
+        $('#add').remove();
+        $('#formulas').append("<input type='text' name='formula[]' placeholder='Formula' /> <a id='add' onclick='addRow()'>+</a><br />");
+    }
+</script>
+
+<form id='formula-form' action="/submit" method="POST">
+    <div id="formulas">
+    {% for formula in formulas %}
+        <input type="text" name="formula[]" value="{{ formula }}" placeholder="Formula" /><br />
+    {% endfor %}
+        <input type="text" name="formula[]" placeholder="Formula" /> <a id="add" onclick="addRow()">+</a><br />
+    </div>
+    <input type="submit" value="Submit" />
+</form>
