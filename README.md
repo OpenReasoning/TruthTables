@@ -5,7 +5,7 @@ Truth Tables
 
 This is a flask app (with a python module backing it) that can be used to generate Truth Trees for any number of given logical formulas.
 
-![Flask App](https://raw.githubusercontent.com/MasterOdin/TruthTables/master/images/screenshot1.png)
+![Flask App](https://raw.githubusercontent.com/MasterOdin/TruthTables/master/static/screenshot1.png)
 
 It uses a functional form for inputting logical formulas. This is the base identity for inputs:
 ```
