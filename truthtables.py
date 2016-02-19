@@ -40,6 +40,9 @@ def break_formula(formula):
             # these cannot be broken apart anymore
             pass
         if isinstance(broken[temp], Not):
+            for i in range(len(unbroken)):
+                if temp < unbroken[i]:
+                    unbroken[i] += 1
             broken = broken[:(temp+1)] + [copy.deepcopy(broken[temp].args[0])] + broken[(temp+1):]
             unbroken.append(len(broken[:(temp+1)]))
         elif isinstance(broken[temp], And) or isinstance(broken[temp], Or) or isinstance(broken[temp], If) or isinstance(broken[temp], Iff):

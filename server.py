@@ -14,7 +14,7 @@ def pretty_print(formula):
     if isinstance(formula, Symbol) or isinstance(formula, Predicate):
         text = str(formula)
     elif isinstance(formula, Not):
-        text = "¬" + str(formula.args[0])
+        text = "¬" + pretty_print(formula.args[0])
     else:
         temp = []
         for arg in formula.args:
@@ -30,7 +30,7 @@ def pretty_print(formula):
         else:
             raise TypeError("Invalid Formula Type: " + type(formula))
         text = "(" + text + ")"
-    return text.strip()
+    return Markup(text.strip())
 
 
 @app.route("/")
