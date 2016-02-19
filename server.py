@@ -48,10 +48,15 @@ def generate_table():
             del formulas[i]
             i -= 1
         i += 1
+    form = Markup(render_template('form.html', formulas=formulas))
     pretty = []
     for i in range(len(formulas)):
         formulas[i] = str(formulas[i]).strip()
-        pretty.append(pretty_print(parse(formulas[i])))
+        try:
+            pretty.append(pretty_print(parse(formulas[i])))
+        except (SyntaxError, TypeError) as exception:
+            return render_template('error.html', error=str(exception), form=form)
+
     symbols, values = truthtables.runner(formulas)
     rows = []
     for i in range(len(values)):
@@ -70,7 +75,6 @@ def generate_table():
                 new_str = "<b><u>" + (TRUE_STRING if values[i][1][j] else FALSE_STRING) + "</u></b>"
             rows[-1].append(Markup(new_str))
 
-    form = Markup(render_template('form.html', formulas=formulas))
     return render_template('table.html', formulas=pretty, symbols=symbols, combinations=values, rows=rows, form=form)
 
 if __name__ == '__main__':
