@@ -1,6 +1,7 @@
 # pylint: disable=missing-docstring
 
 from forseti.formula import Symbol, Not, And, Or, If, Iff
+from nose import run as nose_run
 from nose.tools import assert_equal, raises
 from nose_parameterized import parameterized, param
 import truthtables
@@ -102,7 +103,6 @@ def test_not_and():
 
 def test_and_or():
     table = truthtables.runner("and(A, or(B,C))")
-    # A, and, B, Or, C
     assert_equal([[[True, True, True, True, True]],
                   [[True, True, True, True, False]],
                   [[True, True, False, True, True]],
@@ -180,3 +180,6 @@ def test_truthtables_invalid_type_list():
 def test_combinations(expected, num):
     actual = truthtables.get_combinations(num)
     assert_equal(expected, actual)
+
+if __name__ == "__main__":
+    nose_run()
