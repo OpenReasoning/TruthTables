@@ -1,62 +1,16 @@
 # -*- coding: utf-8 -*-
 
+"""
+Module for generating Truth Tables for logical formulas
+"""
+
 from __future__ import print_function
-import copy
+import argparse
 import forseti.parser
 from forseti.formula import Formula, Symbol, Predicate, Not, And, Or, If, Iff
-import argparse
 
 
-TRUE_STRING = "<span style='color: green;'>T</span>"
-FALSE_STRING = "<span style='color: red;'>F</span>"
-
-
-def get_symbols(formula):
-    """
-
-    :param formula:
-    :type formula: Formula
-    :return:
-    """
-
-    symbols = list()
-
-    if isinstance(formula, Symbol) or isinstance(formula, Predicate):
-        symbols.append(formula)
-    else:
-        for arg in formula.args:
-            for i in get_symbols(arg):
-                if i not in symbols:
-                    symbols.append(i)
-    return symbols
-
-
-def break_formula(formula):
-    broken = [copy.deepcopy(formula)]
-    unbroken = [0]
-    while len(unbroken) > 0:
-        temp = unbroken.pop(0)
-        if isinstance(broken[temp], Symbol) or isinstance(broken[temp], Predicate):
-            # these cannot be broken apart anymore
-            pass
-        if isinstance(broken[temp], Not):
-            for i in range(len(unbroken)):
-                if temp < unbroken[i]:
-                    unbroken[i] += 1
-            broken = broken[:(temp+1)] + [copy.deepcopy(broken[temp].args[0])] + broken[(temp+1):]
-            unbroken.append(len(broken[:(temp+1)]))
-        elif isinstance(broken[temp], And) or isinstance(broken[temp], Or) or isinstance(broken[temp], If) or isinstance(broken[temp], Iff):
-            for i in range(len(unbroken)):
-                if temp < unbroken[i]:
-                    unbroken[i] += 2
-            broken = broken[:temp] + [copy.deepcopy(broken[temp].args[0])] + [broken[temp]] + [copy.deepcopy(broken[temp].args[1])] + broken[(temp+1):]
-            unbroken.append(len(broken[:temp]))
-            unbroken.append(len(broken[:temp])+2)
-
-    return broken
-
-
-def evaluate_argument(formula, symbols, combination):
+def evaluate_formula(formula, symbols, combination):
     """
 
     :param formula:
@@ -64,15 +18,14 @@ def evaluate_argument(formula, symbols, combination):
     :param combination:
     :return:
     """
-    formula = copy.deepcopy(formula)
     if isinstance(formula, Symbol) or isinstance(formula, Predicate):
         return combination[symbols.index(formula)]
     elif isinstance(formula, Not):
-        return not evaluate_argument(formula.args[0], symbols, combination)
+        return not evaluate_formula(formula.args[0], symbols, combination)
     else:
-        args = formula.args
-        for i in range(len(args)):
-            args[i] = evaluate_argument(args[i], symbols, combination)
+        args = []
+        for i in range(len(formula.args)):
+            args.append(evaluate_formula(formula.args[i], symbols, combination))
         if isinstance(formula, And):
             return False not in args
         elif isinstance(formula, Or):
@@ -92,7 +45,8 @@ def get_combinations(num):
     """
     temp = [True] * num
     combinations = []
-    for i in range(2**num):
+    i = 0
+    while i < 2 ** num:
         combinations.append(temp[::-1])
         for j in range(len(temp)):
             if temp[j] is True:
@@ -100,72 +54,231 @@ def get_combinations(num):
                 break
             else:
                 temp[j] = True
+        i += 1
     return combinations
+
+
+def pretty_print(formula):
+    """
+
+    :param formula:
+    :return:
+    """
+    if isinstance(formula, Symbol) or isinstance(formula, Predicate):
+        text = str(formula)
+    elif isinstance(formula, Not):
+        text = "¬" + pretty_print(formula.args[0])
+    else:
+        temp = []
+        for arg in formula.args:
+            temp.append(pretty_print(arg))
+        if isinstance(formula, And):
+            text = " ∧ ".join(temp)
+        elif isinstance(formula, Or):
+            text = " ∨ ".join(temp)
+        elif isinstance(formula, If):
+            text = " → ".join(temp)
+        elif isinstance(formula, Iff):
+            text = " ↔ ".join(temp)
+        else:
+            raise TypeError("Invalid Formula Type: " + type(formula))
+        text = "(" + text + ")"
+    return text.strip()
+
+
+def is_connective(char):
+    """
+    Is the given character a logical connective (one of the pretty printed ones)
+    :param char:
+    :return:
+    """
+    return char in [u"¬", u"∧", u"∨", u"→", u"↔"]
+
+
+def is_atomic(formula):
+    """
+    Is the given formula "Atomic" (contains no connectives), so Symbol or Predicate
+    :param formula:
+    :return:
+    """
+    return isinstance(formula, Symbol) or isinstance(formula, Predicate)
+
+
+def is_binary_operator(formula):
+    """
+    Is the given formula a binary logical connective (and, or, if, iff)?
+    :param formula:
+    :return:
+    """
+    return isinstance(formula, And) or isinstance(formula, Or) \
+           or isinstance(formula, If) or isinstance(formula, Iff)
+
+
+def is_operator(formula):
+    """
+    Is the given formula a logical operator (binary connectives or not)
+    :param formula:
+    :return:
+    """
+    return is_binary_operator(formula) or isinstance(formula, Not)
 
 
 def runner(formulas):
     """
-
+    Generate the Truth Table for a given list of logical formulas in string form
     :param formulas:
-    :type formulas: list|str
     :return:
     """
-    if isinstance(formulas, list):
-        symbols = []
-        parsed_formulas = []
-        broken_formulas = []
-        for formula in formulas:
-            if formula == "":
-                continue
-            parsed_formula = forseti.parser.parse(formula)
-            parsed_formulas.append(parsed_formula)
-            broken_formulas.append(break_formula(parsed_formula))
-            for symbol in get_symbols(parsed_formula):
-                if symbol not in symbols:
-                    symbols.append(symbol)
-        symbols.sort()
-        combinations = get_combinations(len(symbols))
-        evaluations = []
-        symbol_evaluations = []
-        for combination in combinations:
-            eval_temp = []
-            symbol_temp = []
-            for i in range(len(broken_formulas)):
-                formula = parsed_formulas[i]
-                eval_temp.append(evaluate_argument(formula, symbols, combination))
-                broken_formula = broken_formulas[i]
-                temp = []
-                temp3 = []
-                for broken in broken_formula:
-                    temp2 = evaluate_argument(broken, symbols, combination)
-                    string = TRUE_STRING if temp2 else FALSE_STRING
-                    if broken == formula:
-                        string = "<b><u>" + string + "</u></b>"
-                    if not (isinstance(broken, Symbol) or isinstance(broken, Predicate)):
-                        temp3.append(string)
-                    temp.append(temp2)
-                symbol_temp.append([temp, temp3])
-            evaluations.append(eval_temp)
-            symbol_evaluations.append(symbol_temp)
-        return symbols, [[combinations[i], evaluations[i], symbol_evaluations[i]] for i in range(len(combinations))]
-    elif isinstance(formulas, str):
-        formula = formulas
-        parsed_formula = forseti.parser.parse(formula)
-        symbols = sorted(get_symbols(parsed_formula))
-        combinations = get_combinations(len(symbols))
-        evaulations = []
-        for combination in combinations:
-            evaulations.append(evaluate_argument(parsed_formula, symbols, combination))
-        return symbols, [[combinations[i], evaulations[i]] for i in range(len(combinations))]
-    else:
-        raise TypeError("Invalid argument type, it should be either str or list of strings")
+    if isinstance(formulas, str):
+        formulas = [formulas]
 
+    if not isinstance(formulas, list):
+        raise TypeError("Expected str or list, got " + type(formulas))
+
+    parsed_formulas = []
+    for formula in formulas:
+        formula = formula.strip()
+        if len(formula) == 0:
+            pass
+        parsed_formulas.append(forseti.parser.parse(formula))
+    return TruthTable(parsed_formulas)
+
+
+class TruthTable(object):
+    """
+    Truth Table class
+    """
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, formulas, display_connectives=True):
+        """
+
+        :param formulas:
+        :return:
+        """
+        self.broken_formulas = []
+        self.broken_evaluation = []
+        self.evaluation = []
+        self.connective_evaluation = []
+        self.main_connective_index = []
+        self.display_connectives = display_connectives
+        self.symbols = []
+
+        if not isinstance(formulas, list):
+            raise TypeError("Invalid argument type, expected type list, got " + type(formulas))
+        for formula in formulas:
+            if not isinstance(formula, Formula):
+                raise TypeError("Invalid argument in list, expected typed Formula, got " +
+                                type(formula))
+        self.formulas = formulas
+        self.break_apart_formulas()
+        self.combinations = get_combinations(len(self.symbols))
+        self.evaluate_table()
+
+    def break_apart_formulas(self):
+        """
+
+        :return:
+        """
+        for formula in self.formulas:
+            broken_formula = [formula]
+            unbroken = [0]
+            while len(unbroken) > 0:
+                idx = unbroken.pop(0)
+                if is_atomic(broken_formula[idx]):
+                    if broken_formula[idx] not in self.symbols:
+                        self.symbols.append(broken_formula[idx])
+                else:
+                    if isinstance(broken_formula[idx], Not):
+                        for i in range(len(unbroken)):
+                            if idx < unbroken[i]:
+                                unbroken[i] += 1
+                        broken_formula = broken_formula[:(idx + 1)] + \
+                            [broken_formula[idx].args[0]] + broken_formula[(idx + 1):]
+                        unbroken.append(len(broken_formula[:(idx + 1)]))
+                    elif is_binary_operator(broken_formula[idx]):
+                        for i in range(len(unbroken)):
+                            if idx < unbroken[i]:
+                                unbroken[i] += 2
+                        broken_formula = broken_formula[:idx] + [broken_formula[idx].args[0]] + \
+                            [broken_formula[idx]] + [broken_formula[idx].args[1]] + \
+                            broken_formula[(idx + 1):]
+                        unbroken.append(len(broken_formula[:idx]))
+                        unbroken.append(len(broken_formula[:idx]) + 2)
+            if len(broken_formula) > 0:
+                self.broken_formulas.append(broken_formula)
+        self.symbols.sort()
+
+    def evaluate_table(self):
+        """
+
+        :return:
+        """
+        connective_index = [True] * len(self.formulas)
+        for combination in self.combinations:
+            broken_evaluation = []
+            connective_evaluation = []
+            evaluation = []
+            for idx in range(len(self.broken_formulas)):
+                broken_evaluation.append([])
+                connective_evaluation.append([])
+                for idx2 in range(len(self.broken_formulas[idx])):
+                    broken = self.broken_formulas[idx][idx2]
+                    temp = evaluate_formula(broken, self.symbols, combination)
+                    broken_evaluation[-1].append(temp)
+                    if is_operator(broken):
+                        connective_evaluation[-1].append(temp)
+                    if self.formulas[idx] == broken:
+                        if connective_index[idx]:
+                            if len(connective_evaluation[-1]) == 0:
+                                self.main_connective_index.append([])
+                            else:
+                                self.main_connective_index.append([idx2, (len(connective_evaluation[-1])-1)])
+                            connective_index[idx] = False
+                        evaluation.append(temp)
+            self.broken_evaluation.append(broken_evaluation)
+            self.connective_evaluation.append(connective_evaluation)
+            self.evaluation.append(evaluation)
+
+    def generate_table(self):
+        """
+
+        :return:
+        """
+        pretty_formulas = [pretty_print(formula) for formula in self.formulas]
+        table = " ".join([str(symbol) for symbol in self.symbols]) + " | "
+        table += " ".join(pretty_formulas)
+        table += "\n" + "-" * len(table) + "\n"
+
+        for i in range(len(self.combinations)):
+            table += " ".join(["T" if combination else "F" for combination in self.combinations[i]])
+            table += " | "
+            temps = []
+            for j in range(len(pretty_formulas)):
+                pretty = pretty_formulas[j]
+                temp = ""
+                cnt = 0
+                for char in pretty:
+                    if is_connective(char):
+                        if self.main_connective_index[j][1] == cnt:
+                            temp = temp[:-1]
+                            temp += "-"
+                        if self.display_connectives or self.main_connective_index[j][1] == cnt:
+                            temp += "T" if self.connective_evaluation[i][j][cnt] else "F"
+                        else:
+                            temp += " "
+                        cnt += 1
+                    else:
+                        temp += " "
+                if len(temp.strip()) == 0:
+                    temp = "T" if self.evaluation[i][j] else "F"
+                temps.append(temp)
+            table += " ".join(temps)
+            table += "\n"
+        return table
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate Truth Table for a logical formula")
-    parser.add_argument('formulas', metavar='formula', type=str, nargs="+", help='Logical formula')
-    args = parser.parse_args()
-    symbols, combinations = runner(args.formulas)
-
-    for i in range(len(combinations)):
-        print(str(combinations[i][0]) + ": " + str(combinations[i][1]))
+    PARSER = argparse.ArgumentParser(description="Generate Truth Table for a logical formula")
+    PARSER.add_argument('formulas', metavar='formula', type=str, nargs="+", help='Logical formula')
+    PARSER_ARGS = PARSER.parse_args()
+    TRUTH_TABLE = runner(PARSER_ARGS.formulas)
+    print(TRUTH_TABLE.generate_table())

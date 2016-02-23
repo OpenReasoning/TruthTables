@@ -1,20 +1,19 @@
 {% include 'header.html' %}
-<h1>Truth Tables</h1>
 Logical Formulas:<br />
 {{ form }}
 <br /><br />
 <table cellspacing="0 px">
     <tr>
-    {% for symbol in symbols %}
+    {% for symbol in table.symbols %}
         <th>{{ symbol }}</th>
     {% endfor %}
     {% for formula in formulas %}
         <th>{{ formula }}</th>
     {% endfor %}
     </tr>
-{% for i in range(combinations|length) %}
+{% for i in range(table.combinations|length) %}
     <tr>
-    {% for j in combinations[i][0] %}
+    {% for j in table.combinations[i] %}
         <td>
         {% if j %}
             <span style="color: green">T</span>
