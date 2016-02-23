@@ -102,33 +102,47 @@ def test_not_and():
 
 
 def test_and_or():
-    table = truthtables.runner("and(A, or(B,C))")
-    assert_equal([[[True, True, True, True, True]],
-                  [[True, True, True, True, False]],
-                  [[True, True, False, True, True]],
-                  [[True, False, False, False, False]],
-                  [[False, False, True, True, True]],
-                  [[False, False, True, True, False]],
-                  [[False, False, False, True, True]],
-                  [[False, False, False, False, False]]],
+    table = truthtables.runner("and(or(A, C), or(B,C))")
+    # A or C and B or C
+    assert_equal([[[True, True, True, True, True, True, True]],
+                  [[True, True, False, True, True, True, False]],
+                  [[True, True, True, True, False, True, True]],
+                  [[True, True, False, False, False, False, False]],
+                  [[False, True, True, True, True, True, True]],
+                  [[False, False, False, False, True, True, False]],
+                  [[False, True, True, True, False, True, True]],
+                  [[False, False, False, False, False, False, False]]],
                  table.broken_evaluation)
-    assert_equal([[Symbol("A"), And(Symbol("A"), Or(Symbol("B"), Symbol("C"))), Symbol("B"),
+    assert_equal([[Symbol("A"), Or(Symbol("A"), Symbol("C")), Symbol("C"),
+                   And(Or(Symbol("A"), Symbol("C")), Or(Symbol("B"), Symbol("C"))), Symbol("B"),
                    Or(Symbol("B"), Symbol("C")), Symbol("C")]], table.broken_formulas)
     assert_equal([[True, True, True], [True, True, False], [True, False, True],
                   [True, False, False], [False, True, True], [False, True, False],
                   [False, False, True], [False, False, False]], table.combinations)
-    assert_equal([[[True, True]], [[True, True]], [[True, True]], [[False, False]],
-                  [[False, True]], [[False, True]], [[False, True]], [[False, False]]],
+    assert_equal([[[True, True, True]], [[True, True, True]], [[True, True, True]],
+                  [[True, False, False]], [[True, True, True]], [[False, False, True]],
+                  [[True, True, True]], [[False, False, False]]],
                  table.connective_evaluation)
-    assert_equal([[True], [True], [True], [False], [False], [False], [False], [False]],
+    assert_equal([[True], [True], [True], [False], [True], [False], [True], [False]],
                  table.evaluation)
-    assert_equal([And(Symbol("A"), Or(Symbol("B"), Symbol("C")))], table.formulas)
-    assert_equal([[1, 0]], table.main_connective_index)
+    assert_equal([And(Or(Symbol("A"), Symbol("C")), Or(Symbol("B"), Symbol("C")))], table.formulas)
+    assert_equal([[3, 1]], table.main_connective_index)
     assert_equal([Symbol("A"), Symbol("B"), Symbol("C")], table.symbols)
+
+    assert_equal("A B C | ((A ∨ C) ∧ (B ∨ C))\n" +
+                 "---------------------------\n" +
+                 "T T T |     T   -T    T    \n" +
+                 "T T F |     T   -T    T    \n" +
+                 "T F T |     T   -T    T    \n" +
+                 "T F F |     T   -F    F    \n" +
+                 "F T T |     T   -T    T    \n" +
+                 "F T F |     F   -F    T    \n" +
+                 "F F T |     T   -T    T    \n" +
+                 "F F F |     F   -F    F    \n", table.generate_table())
 
 
 def test_and_not_or():
-    table = truthtables.runner("and(not(or(A, C)), B)")
+    table = truthtables.runner("and(not(or(A, C)), B)", display_connectives=False)
     assert_equal([[[False, True, True, True, False, True]],
                   [[False, True, True, False, False, True]],
                   [[False, True, True, True, False, False]],
@@ -153,6 +167,17 @@ def test_and_not_or():
     assert_equal([And(Not(Or(Symbol("A"), Symbol("C"))), Symbol("B"))], table.formulas)
     assert_equal([[4, 2]], table.main_connective_index)
     assert_equal([Symbol("A"), Symbol("B"), Symbol("C")], table.symbols)
+
+    assert_equal("A B C | (¬(A ∨ C) ∧ B)\n" +
+                 "----------------------\n" +
+                 "T T T |          -F   \n" +
+                 "T T F |          -F   \n" +
+                 "T F T |          -F   \n" +
+                 "T F F |          -F   \n" +
+                 "F T T |          -F   \n" +
+                 "F T F |          -T   \n" +
+                 "F F T |          -F   \n" +
+                 "F F F |          -F   \n", table.generate_table())
 
 
 @raises(TypeError)

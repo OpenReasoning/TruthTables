@@ -123,10 +123,11 @@ def is_operator(formula):
     return is_binary_operator(formula) or isinstance(formula, Not)
 
 
-def runner(formulas):
+def runner(formulas, display_connectives=True):
     """
     Generate the Truth Table for a given list of logical formulas in string form
     :param formulas:
+    :param display_connectives:
     :return:
     """
     if isinstance(formulas, str):
@@ -141,7 +142,7 @@ def runner(formulas):
         if len(formula) == 0:
             pass
         parsed_formulas.append(forseti.parser.parse(formula))
-    return TruthTable(parsed_formulas)
+    return TruthTable(parsed_formulas, display_connectives=display_connectives)
 
 
 class TruthTable(object):
@@ -279,6 +280,8 @@ class TruthTable(object):
 if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description="Generate Truth Table for a logical formula")
     PARSER.add_argument('formulas', metavar='formula', type=str, nargs="+", help='Logical formula')
+    PARSER.add_argument('-c', action='store_const', const=False, default=True,
+                        help="Only show truth value of main connective")
     PARSER_ARGS = PARSER.parse_args()
-    TRUTH_TABLE = runner(PARSER_ARGS.formulas)
+    TRUTH_TABLE = runner(PARSER_ARGS.formulas, display_connectives=PARSER_ARGS.c)
     print(TRUTH_TABLE.generate_table())
