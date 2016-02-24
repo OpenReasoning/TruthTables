@@ -81,7 +81,7 @@ def pretty_print(formula):
         elif isinstance(formula, Iff):
             text = " ↔ ".join(temp)
         else:
-            raise TypeError("Invalid Formula Type: " + type(formula))
+            raise TypeError("Invalid Formula Type: " + str(type(formula)))
         text = "(" + text + ")"
     return text.strip()
 
@@ -111,7 +111,7 @@ def is_binary_operator(formula):
     :return:
     """
     return isinstance(formula, And) or isinstance(formula, Or) \
-           or isinstance(formula, If) or isinstance(formula, Iff)
+        or isinstance(formula, If) or isinstance(formula, Iff)
 
 
 def is_operator(formula):
@@ -134,7 +134,7 @@ def runner(formulas, display_connectives=True):
         formulas = [formulas]
 
     if not isinstance(formulas, list):
-        raise TypeError("Expected str or list, got " + type(formulas))
+        raise TypeError("Expected str or list, got " + str(type(formulas)))
 
     parsed_formulas = []
     for formula in formulas:
@@ -165,11 +165,12 @@ class TruthTable(object):
         self.symbols = []
 
         if not isinstance(formulas, list):
-            raise TypeError("Invalid argument type, expected type list, got " + type(formulas))
+            raise TypeError("Invalid argument type, expected type list, "
+                            "got " + str(type(formulas)))
         for formula in formulas:
             if not isinstance(formula, Formula):
                 raise TypeError("Invalid argument in list, expected typed Formula, got " +
-                                type(formula))
+                                str(type(formula)))
         self.formulas = formulas
         self.break_apart_formulas()
         self.combinations = get_combinations(len(self.symbols))
