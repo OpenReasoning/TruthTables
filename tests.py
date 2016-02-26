@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=missing-docstring
 
-#from __future__ import unicode_literals
+from __future__ import unicode_literals
 from forseti.formula import Symbol, Not, And, Or, If, Iff
-from nose import run as nose_run
+from nose import runmodule
 from nose.tools import assert_equal, raises
 from nose_parameterized import parameterized, param
 import sys
@@ -23,6 +23,8 @@ def test_symbol():
     assert_equal([Symbol("A")], table.formulas)
     assert_equal([[]], table.main_connective_index)
     assert_equal([Symbol("A")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
 
 def test_not():
@@ -35,6 +37,8 @@ def test_not():
     assert_equal([Not(Symbol("A"))], table.formulas)
     assert_equal([[0, 0]], table.main_connective_index)
     assert_equal([Symbol("A")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
 
 def test_and():
@@ -49,6 +53,8 @@ def test_and():
     assert_equal([And(Symbol("A"), Symbol("B"))], table.formulas)
     assert_equal([[1, 0]], table.main_connective_index)
     assert_equal([Symbol("A"), Symbol("B")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
 
 def test_or():
@@ -62,6 +68,8 @@ def test_or():
     assert_equal([Or(Symbol("A"), Symbol("B"))], table.formulas)
     assert_equal([[1, 0]], table.main_connective_index)
     assert_equal([Symbol("A"), Symbol("B")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
 
 def test_if():
@@ -75,6 +83,8 @@ def test_if():
     assert_equal([If(Symbol("A"), Symbol("B"))], table.formulas)
     assert_equal([[1, 0]], table.main_connective_index)
     assert_equal([Symbol("A"), Symbol("B")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
 
 def test_iff():
@@ -89,6 +99,8 @@ def test_iff():
     assert_equal([Iff(Symbol("A"), Symbol("B"))], table.formulas)
     assert_equal([[1, 0]], table.main_connective_index)
     assert_equal([Symbol("A"), Symbol("B")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
 
 def test_not_and():
@@ -105,6 +117,8 @@ def test_not_and():
     assert_equal([Not(And(Symbol("A"), Symbol("B")))], table.formulas)
     assert_equal([[0, 0]], table.main_connective_index)
     assert_equal([Symbol("A"), Symbol("B")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
 
 def test_and_or():
@@ -134,6 +148,8 @@ def test_and_or():
     assert_equal([And(Or(Symbol("A"), Symbol("C")), Or(Symbol("B"), Symbol("C")))], table.formulas)
     assert_equal([[3, 1]], table.main_connective_index)
     assert_equal([Symbol("A"), Symbol("B"), Symbol("C")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
     if not PYTHON_2:
         assert_equal("A B C | ((A ∨ C) ∧ (B ∨ C))\n" +
@@ -174,6 +190,8 @@ def test_and_not_or():
     assert_equal([And(Not(Or(Symbol("A"), Symbol("C"))), Symbol("B"))], table.formulas)
     assert_equal([[4, 2]], table.main_connective_index)
     assert_equal([Symbol("A"), Symbol("B"), Symbol("C")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
     if not PYTHON_2:
         assert_equal("A B C | (¬(A ∨ C) ∧ B)\n" +
@@ -186,6 +204,36 @@ def test_and_not_or():
                      "F T F |          -T   \n" +
                      "F F T |          -F   \n" +
                      "F F F |          -F   \n", table.generate_table())
+
+
+def test_tautology():
+    table = truthtables.runner("or(A,not(A))")
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is a Tautology", table.get_table_assessment()[0])
+
+
+def test_contradiction():
+    table = truthtables.runner("and(A,not(A))")
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is a Contradiction", table.get_table_assessment()[0])
+
+
+def test_set_1():
+    table = truthtables.runner(["A", "A"])
+    assert_equal([[[True], [True]], [[False], [False]]], table.broken_evaluation)
+    assert_equal([[Symbol("A")], [Symbol("A")]], table.broken_formulas)
+    assert_equal([[True], [False]], table.combinations)
+    assert_equal([[[], []], [[], []]], table.connective_evaluation)
+    assert_equal([[True, True], [False, False]], table.evaluation)
+    assert_equal([Symbol("A"), Symbol("A")], table.formulas)
+    assert_equal([[], []], table.main_connective_index)
+    assert_equal([Symbol("A")], table.symbols)
+    assert_equal(4, len(table.get_table_assessment()))
+
+
+def test_set_2():
+    table = truthtables.runner(["A", "B"])
+    assert_equal(1, len(table.get_table_assessment()))
 
 
 @raises(TypeError)
@@ -215,4 +263,4 @@ def test_combinations(expected, num):
     assert_equal(expected, actual)
 
 if __name__ == "__main__":
-    nose_run()
+    runmodule()

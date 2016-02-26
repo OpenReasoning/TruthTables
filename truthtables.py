@@ -4,8 +4,9 @@
 Module for generating Truth Tables for logical formulas
 """
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import argparse
+from six import string_types
 import forseti.parser
 from forseti.formula import Formula, Symbol, Predicate, Not, And, Or, If, Iff
 
@@ -130,7 +131,7 @@ def runner(formulas, display_connectives=True):
     :param display_connectives:
     :return:
     """
-    if isinstance(formulas, str):
+    if isinstance(formulas, string_types):
         formulas = [formulas]
 
     if not isinstance(formulas, list):
@@ -277,6 +278,55 @@ class TruthTable(object):
             table += " ".join(temps)
             table += "\n"
         return table
+
+    def get_table_assessment(self):
+        if len(self.formulas) == 1:
+            temp = sum([i for j in range(len(self.combinations)) for i in self.evaluation[j]])
+            if temp == len(self.combinations):
+                return ["Sentence is a Tautology"]
+            elif temp == 0:
+                return ["Sentence is a Contradiction"]
+            else:
+                return ["Sentence is TT-Possible"]
+        else:
+            statements = []
+            is_taut = True
+            first_consequence = True
+            last_consequence = True
+            taut_consistent = False
+            for i in range(len(self.combinations)):
+                temp = self.evaluation[i][0]
+                all_first_true = True
+                all_last_true = True
+                for j in range(len(self.evaluation[i])):
+                    if self.evaluation[i][j] != temp:
+                        is_taut = False
+                    if all_first_true and j != 0:
+                        all_first_true = self.evaluation[i][j]
+                    if all_last_true and j != (len(self.evaluation[i])-1):
+                        all_last_true = self.evaluation[i][j]
+
+                if first_consequence and all_first_true:
+                    first_consequence = self.evaluation[i][0]
+
+                if last_consequence and all_last_true:
+                    last_consequence = self.evaluation[i][-1]
+
+                if not taut_consistent and all(self.evaluation[i]):
+                    taut_consistent = True
+
+            if is_taut:
+                statements.append("Sentences are Tautologically Equivalent")
+
+            if first_consequence:
+                statements.append("First Sentence is Tautological Consequence of Others")
+
+            if last_consequence:
+                statements.append("Last Sentence is Tautological Consequence of Others")
+
+            if taut_consistent:
+                statements.append("Sentences are Tautologically Consistent")
+        return statements
 
 if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description="Generate Truth Table for a logical formula")
