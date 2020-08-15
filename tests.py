@@ -2,10 +2,10 @@
 # pylint: disable=missing-docstring
 
 from __future__ import unicode_literals
-from forseti.formula import Symbol, Not, And, Or, If, Iff
+from forseti.formula import Symbol, Not, And, Or, If, Iff, Predicate
 from nose import runmodule
 from nose.tools import assert_equal, raises
-from nose_parameterized import parameterized, param
+from parameterized import parameterized, param
 import sys
 import truthtables
 
@@ -252,15 +252,45 @@ def test_truthtables_invalid_type_list():
 
 
 @parameterized([
-    param([[True], [False]], 1),
-    param([[True, True], [True, False], [False, True], [False, False]], 2),
-    param([[True, True, True], [True, True, False], [True, False, True],
-           [True, False, False], [False, True, True], [False, True, False],
-           [False, False, True], [False, False, False]], 3)
+    (Symbol('a'), 'a'),
+    (Not(Symbol('a')), '¬a'),
+    (And(Symbol('a'), Symbol('b')), '(a ∧ b)'),
+    (Or(Symbol('a'), Symbol('b')), '(a ∨ b)'),
+    (If(Symbol('a'), Symbol('b')), '(a → b)'),
+    (Iff(Symbol('a'), Symbol('b')), '(a ↔ b)'),
+    (Not(And(
+        Symbol('a'),
+        If(Symbol('c'), Iff(Or(Symbol('d'), Symbol('a')), Symbol('c')))
+    )), '¬(a ∧ (c → ((d ∨ a) ↔ c)))')
+])
+def test_pretty_print(formula, expected):
+    assert_equal(expected, truthtables.pretty_print(formula))
+
+
+@raises(TypeError)
+def test_pretty_print_raises():
+    class Foo(Predicate):
+        name = "not"
+        arity = 1
+    truthtables.pretty_print(Foo)
+
+
+@parameterized([
+    ([[True], [False]], 1),
+    ([[True, True], [True, False], [False, True], [False, False]], 2),
+    (
+        [
+            [True, True, True], [True, True, False], [True, False, True],
+            [True, False, False], [False, True, True], [False, True, False],
+            [False, False, True], [False, False, False]
+        ],
+        3
+    )
 ])
 def test_combinations(expected, num):
     actual = truthtables.get_combinations(num)
     assert_equal(expected, actual)
+
 
 if __name__ == "__main__":
     runmodule()

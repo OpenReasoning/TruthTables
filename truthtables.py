@@ -26,7 +26,9 @@ def evaluate_formula(formula, symbols, combination):
     else:
         args = []
         for i in range(len(formula.args)):
-            args.append(evaluate_formula(formula.args[i], symbols, combination))
+            args.append(
+                evaluate_formula(formula.args[i], symbols, combination)
+            )
         if isinstance(formula, And):
             return False not in args
         elif isinstance(formula, Or):
@@ -328,11 +330,25 @@ class TruthTable(object):
                 statements.append("Sentences are Tautologically Consistent")
         return statements
 
+
 if __name__ == "__main__":
-    PARSER = argparse.ArgumentParser(description="Generate Truth Table for a logical formula")
-    PARSER.add_argument('formulas', metavar='formula', type=str, nargs="+", help='Logical formula')
-    PARSER.add_argument('-c', action='store_const', const=False, default=True,
-                        help="Only show truth value of main connective")
+    PARSER = argparse.ArgumentParser(
+        description="Generate Truth Table for a logical formula"
+    )
+    PARSER.add_argument(
+        'formulas',
+        metavar='formula',
+        type=str,
+        nargs="+",
+        help='Logical formula'
+    )
+    PARSER.add_argument(
+        '-c',
+        action='store_const',
+        const=False,
+        default=True,
+        help="Only show truth value of main connective"
+    )
     PARSER_ARGS = PARSER.parse_args()
     TRUTH_TABLE = runner(PARSER_ARGS.formulas, display_connectives=PARSER_ARGS.c)
     print(TRUTH_TABLE.generate_table())
