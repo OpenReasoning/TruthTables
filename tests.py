@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from forseti.formula import Symbol, Not, And, Or, If, Iff, Predicate
 from nose import runmodule
 from nose.tools import assert_equal, raises
-from parameterized import parameterized, param
+from parameterized import parameterized
 import sys
 import truthtables
 
@@ -216,6 +216,20 @@ def test_contradiction():
     table = truthtables.runner("and(A,not(A))")
     assert_equal(1, len(table.get_table_assessment()))
     assert_equal("Sentence is a Contradiction", table.get_table_assessment()[0])
+
+
+def test_empty_statements():
+    table = truthtables.runner(["A", ''])
+    assert_equal([[[True]], [[False]]], table.broken_evaluation)
+    assert_equal([[Symbol("A")]], table.broken_formulas)
+    assert_equal([[True], [False]], table.combinations)
+    assert_equal([[[]], [[]]], table.connective_evaluation)
+    assert_equal([[True], [False]], table.evaluation)
+    assert_equal([Symbol("A")], table.formulas)
+    assert_equal([[]], table.main_connective_index)
+    assert_equal([Symbol("A")], table.symbols)
+    assert_equal(1, len(table.get_table_assessment()))
+    assert_equal("Sentence is TT-Possible", table.get_table_assessment()[0])
 
 
 def test_set_1():

@@ -143,7 +143,7 @@ def runner(formulas, display_connectives=True):
     for formula in formulas:
         formula = formula.strip()
         if len(formula) == 0:
-            pass
+            continue
         parsed_formulas.append(forseti.parser.parse(formula))
     return TruthTable(parsed_formulas, display_connectives=display_connectives)
 
