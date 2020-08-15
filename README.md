@@ -1,7 +1,8 @@
 Truth Tables
 ============
 
-[![Build Status](https://travis-ci.org/MasterOdin/TruthTables.svg?branch=master)](https://travis-ci.org/MasterOdin/TruthTables) [![Coverage Status](https://coveralls.io/repos/github/MasterOdin/TruthTables/badge.svg?branch=master)](https://coveralls.io/github/MasterOdin/TruthTables?branch=master)
+[![Test](https://github.com/OpenReasoning/TruthTables/workflows/Test/badge.svg?branch=master&event=push)](https://github.com/OpenReasoning/TruthTables/actions?query=event%3Apush+workflow%3ATest)
+[![codecov](https://codecov.io/gh/OpenReasoning/TruthTables/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenReasoning/TruthTables)
 
 This is a flask app (with a python module backing it) that can be used to generate Truth Tables for any number of given logical formulas.
 
